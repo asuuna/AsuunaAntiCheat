@@ -48,6 +48,7 @@ public final class MovementListener implements Listener {
         if (from.distanceSquared(to) == 0.0D || PlayerEnvironment.shouldSkipMovement(player)) {
             state.resetAirTicks();
             state.resetLiquidTicks();
+            state.resetTrackedFall();
             return;
         }
 
@@ -60,6 +61,7 @@ public final class MovementListener implements Listener {
         checkFlight(event, player, state, from, to);
         checkStep(event, player, from, to);
         checkLiquidWalk(event, player, state, from, to);
+        checkNoFall(player, state, from, to);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -67,6 +69,7 @@ public final class MovementListener implements Listener {
         MovementState state = state(event.getPlayer());
         state.markTeleportGrace();
         state.resetAirTicks();
+        state.resetTrackedFall();
     }
 
     @EventHandler
@@ -195,6 +198,34 @@ public final class MovementListener implements Listener {
         }
     }
 
+    private void checkNoFall(Player player, MovementState state, Location from, Location to) {
+        CheckSettings settings = config.settings(CheckType.NOFALL);
+        if (!settings.isEnabled() || PlayerEnvironment.isNearSafeMovementBlock(player)
+            || PlayerEnvironment.hasVerticalMovementEffect(player)) {
+            state.resetTrackedFall();
+            return;
+        }
+
+        double dy = to.getY() - from.getY();
+        if (dy < -settings.number("min-fall-step", 0.08D) && !PlayerEnvironment.hasGroundNear(player)) {
+            state.addTrackedFall(-dy);
+            return;
+        }
+
+        if (!PlayerEnvironment.hasGroundNear(player)) {
+            return;
+        }
+
+        double trackedFall = state.trackedFallDistance;
+        double minFall = settings.number("min-tracked-fall-distance", 4.2D);
+        double maxServerFall = settings.number("max-server-fall-distance", 0.75D);
+        if (trackedFall >= minFall && player.getFallDistance() <= maxServerFall) {
+            violations.flag(player, CheckType.NOFALL, 1.0D,
+                "trackedFall=" + round(trackedFall) + " serverFall=" + round(player.getFallDistance()));
+        }
+        state.resetTrackedFall();
+    }
+
     private MovementState state(Player player) {
         return states.computeIfAbsent(player.getUniqueId(), ignored -> new MovementState());
     }
@@ -218,6 +249,7 @@ public final class MovementListener implements Listener {
         private int airTicks;
         private int teleportGraceTicks;
         private int liquidTicks;
+        private double trackedFallDistance;
 
         private int incrementAirTicks() {
             return ++airTicks;
@@ -241,6 +273,14 @@ public final class MovementListener implements Listener {
 
         private void resetLiquidTicks() {
             liquidTicks = 0;
+        }
+
+        private void addTrackedFall(double amount) {
+            trackedFallDistance += Math.max(0.0D, amount);
+        }
+
+        private void resetTrackedFall() {
+            trackedFallDistance = 0.0D;
         }
 
         private void markTeleportGrace() {

@@ -98,6 +98,33 @@ checks:
     cancel-vl: 9.0
     min-delay-millis: 65
 
+  block-reach:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-distance: 5.35
+
+  nuker:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 8.0
+    max-breaks: 18
+    sample-millis: 1000
+    min-spread: 2.5
+
+  fast-bow:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 6.0
+    min-force: 0.85
+    min-draw-millis: 850
+
+  fast-eat:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 6.0
+    min-consume-millis: 1200
+
   scaffold:
     enabled: true
     alert-vl: 5.0
@@ -113,3 +140,18 @@ checks:
     cancel-vl: 7.0
     min-horizontal-distance: 0.04
     open-grace-millis: 250
+
+  inventory-click-speed:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-clicks: 18
+    sample-millis: 1000
+
+  nofall:
+    enabled: true
+    alert-vl: 6.0
+    cancel-vl: 999.0
+    min-fall-step: 0.08
+    min-tracked-fall-distance: 4.2
+    max-server-fall-distance: 0.75

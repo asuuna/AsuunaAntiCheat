@@ -23,8 +23,14 @@ AsuunaAntiCheat detecte des comportements suspects sans bannir automatiquement p
 - `autoclicker`: CPS trop eleve sur fenetre glissante.
 - `fast-place`: placement de blocs trop rapide.
 - `fast-break`: cassage de blocs trop rapide.
+- `block-reach`: interaction bloc trop loin.
+- `nuker`: cassage massif de blocs dans une fenetre courte.
+- `fast-bow`: arc charge trop vite.
+- `fast-eat`: consommation de nourriture trop rapide.
 - `scaffold`: placement sous le joueur sans regard/sneak coherent.
 - `inventory-move`: mouvement horizontal avec inventaire serveur ouvert.
+- `inventory-click-speed`: clics d'inventaire/chest-stealer trop rapides.
+- `nofall`: heuristique d'atterrissage sans fall distance serveur.
 
 ## Compatibilite
 
@@ -43,7 +49,7 @@ mvn clean package
 Jar genere:
 
 ```text
-target/AsuunaAntiCheat-1.1.0.jar
+target/AsuunaAntiCheat-1.2.0.jar
 ```
 
 ## Commandes
@@ -76,5 +82,6 @@ AsuunaAntiCheat appartient a asuuna. Le code est publie sous licence proprietair
 
 - Aucun anti-cheat Bukkit-only ne peut detecter parfaitement tous les cheats sans acces paquet/protocole.
 - Les checks packet-level comme spoof de rotation avance, bad packets profonds ou timer ultra fin demandent une couche protocole dediee.
+- `nofall` reste une heuristique en Bukkit pur; le blocage fiable demande la lecture des paquets client.
 - Les checks sont volontairement conservateurs par defaut.
 - Tester les seuils avec vos plugins de mouvement, jobs, skills, pets, claims et items custom avant production.

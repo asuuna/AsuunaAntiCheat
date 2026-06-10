@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0] - 2026-06-10
+
+### Ajoute
+
+- Checks block-reach, nuker, fast-bow, fast-eat, inventory-click-speed et nofall heuristique.
+- Annulation configurable pour les actions bloc, inventaire, arc et nourriture.
+- Nettoyage des caches joueur pour les nouveaux samples d'interaction.
+
+### Modifie
+
+- Documentation des limites nofall en Bukkit pur.
+
 ## [1.1.0] - 2026-06-10
 
 ### Ajoute

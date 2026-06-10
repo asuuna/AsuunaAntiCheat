@@ -15,22 +15,32 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
 public final class InteractionListener implements Listener {
 
     private final AntiCheatConfig config;
     private final ViolationService violations;
     private final Map<UUID, Deque<Long>> swings = new ConcurrentHashMap<>();
+    private final Map<UUID, Deque<BlockSample>> breaks = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastPlace = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastBreak = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> bowUseStartedAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> foodUseStartedAt = new ConcurrentHashMap<>();
 
     public InteractionListener(AntiCheatConfig config, ViolationService violations) {
         this.config = config;
@@ -77,6 +87,9 @@ public final class InteractionListener implements Listener {
         if (PlayerEnvironment.shouldSkipBlockTimings(player)) {
             return;
         }
+        if (checkBlockReach(event, player, event.getBlockPlaced())) {
+            return;
+        }
         checkScaffold(event, player);
 
         CheckSettings settings = config.settings(CheckType.FAST_PLACE);
@@ -105,6 +118,11 @@ public final class InteractionListener implements Listener {
         if (PlayerEnvironment.shouldSkipBlockTimings(player)) {
             return;
         }
+        if (checkBlockReach(event, player, event.getBlock())) {
+            return;
+        }
+        checkNuker(event, player);
+
         CheckSettings settings = config.settings(CheckType.FAST_BREAK);
         if (!settings.isEnabled()) {
             return;
@@ -129,8 +147,155 @@ public final class InteractionListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
         swings.remove(uuid);
+        breaks.remove(uuid);
         lastPlace.remove(uuid);
         lastBreak.remove(uuid);
+        bowUseStartedAt.remove(uuid);
+        foodUseStartedAt.remove(uuid);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        ItemStack item = event.getItem();
+        if (item == null) {
+            return;
+        }
+
+        Material material = item.getType();
+        long now = System.currentTimeMillis();
+        if (material == Material.BOW || material == Material.CROSSBOW) {
+            bowUseStartedAt.put(player.getUniqueId(), now);
+        }
+        if (PlayerEnvironment.isEdible(item)) {
+            foodUseStartedAt.put(player.getUniqueId(), now);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onShootBow(EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getEntity();
+        CheckSettings settings = config.settings(CheckType.FAST_BOW);
+        if (!settings.isEnabled() || player.hasPermission(config.getBypassPermission())) {
+            return;
+        }
+
+        Long startedAt = bowUseStartedAt.remove(player.getUniqueId());
+        if (startedAt == null) {
+            return;
+        }
+
+        long elapsed = System.currentTimeMillis() - startedAt;
+        double minForce = settings.number("min-force", 0.85D);
+        long minDraw = (long) settings.number("min-draw-millis", 850.0D);
+        if (event.getForce() >= minForce && elapsed < minDraw) {
+            boolean cancel = violations.flag(player, CheckType.FAST_BOW, 1.2D,
+                "draw=" + elapsed + "ms force=" + round(event.getForce()) + " min=" + minDraw + "ms");
+            if (cancel) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onConsume(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+        CheckSettings settings = config.settings(CheckType.FAST_EAT);
+        if (!settings.isEnabled() || player.hasPermission(config.getBypassPermission())) {
+            return;
+        }
+
+        ItemStack item = event.getItem();
+        if (!PlayerEnvironment.isEdible(item)) {
+            return;
+        }
+
+        Long startedAt = foodUseStartedAt.remove(player.getUniqueId());
+        if (startedAt == null) {
+            return;
+        }
+
+        long elapsed = System.currentTimeMillis() - startedAt;
+        long minConsume = (long) settings.number("min-consume-millis", 1200.0D);
+        if (elapsed < minConsume) {
+            boolean cancel = violations.flag(player, CheckType.FAST_EAT, 1.0D,
+                "consume=" + elapsed + "ms min=" + minConsume + "ms item=" + item.getType().name());
+            if (cancel) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    private boolean checkBlockReach(BlockPlaceEvent event, Player player, Block block) {
+        boolean cancel = checkBlockReach(player, block);
+        if (cancel) {
+            event.setCancelled(true);
+        }
+        return cancel;
+    }
+
+    private boolean checkBlockReach(BlockBreakEvent event, Player player, Block block) {
+        boolean cancel = checkBlockReach(player, block);
+        if (cancel) {
+            event.setCancelled(true);
+        }
+        return cancel;
+    }
+
+    private boolean checkBlockReach(Player player, Block block) {
+        CheckSettings settings = config.settings(CheckType.BLOCK_REACH);
+        if (!settings.isEnabled() || player.hasPermission(config.getBypassPermission())) {
+            return false;
+        }
+
+        Location eye = player.getEyeLocation();
+        Location center = block.getLocation().add(0.5D, 0.5D, 0.5D);
+        double distance = eye.distance(center);
+        double maxDistance = settings.number("max-distance", 5.35D);
+        if (distance > maxDistance) {
+            return violations.flag(player, CheckType.BLOCK_REACH, 1.2D,
+                "distance=" + round(distance) + " max=" + round(maxDistance));
+        }
+        return false;
+    }
+
+    private void checkNuker(BlockBreakEvent event, Player player) {
+        CheckSettings settings = config.settings(CheckType.NUKER);
+        if (!settings.isEnabled() || player.hasPermission(config.getBypassPermission())) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long sampleMillis = Math.max(250L, (long) settings.number("sample-millis", 1000.0D));
+        Deque<BlockSample> samples = breaks.computeIfAbsent(player.getUniqueId(), ignored -> new ArrayDeque<>());
+        int count;
+        double spread;
+        synchronized (samples) {
+            samples.addLast(new BlockSample(now, event.getBlock().getLocation()));
+            while (!samples.isEmpty() && now - samples.peekFirst().timeMillis > sampleMillis) {
+                samples.removeFirst();
+            }
+            count = samples.size();
+            spread = maxSpread(samples);
+        }
+
+        int maxBreaks = (int) settings.number("max-breaks", 18.0D) + PlayerEnvironment.hasteAmplifier(player) * 4;
+        double minSpread = settings.number("min-spread", 2.5D);
+        if (count > maxBreaks && spread >= minSpread) {
+            boolean cancel = violations.flag(player, CheckType.NUKER, 1.1D,
+                "breaks=" + count + " max=" + maxBreaks + " spread=" + round(spread));
+            if (cancel) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     private void checkScaffold(BlockPlaceEvent event, Player player) {
@@ -189,5 +354,31 @@ public final class InteractionListener implements Listener {
 
     private String round(double value) {
         return String.format(java.util.Locale.ROOT, "%.3f", value);
+    }
+
+    private double maxSpread(Deque<BlockSample> samples) {
+        double max = 0.0D;
+        for (BlockSample first : samples) {
+            for (BlockSample second : samples) {
+                if (first.location.getWorld() == null || !first.location.getWorld().equals(second.location.getWorld())) {
+                    continue;
+                }
+                double distance = first.location.distance(second.location);
+                if (distance > max) {
+                    max = distance;
+                }
+            }
+        }
+        return max;
+    }
+
+    private static final class BlockSample {
+        private final long timeMillis;
+        private final Location location;
+
+        private BlockSample(long timeMillis, Location location) {
+            this.timeMillis = timeMillis;
+            this.location = location;
+        }
     }
 }

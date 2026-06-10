@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -33,6 +34,11 @@ public final class PlayerEnvironment {
 
     public static int speedAmplifier(Player player) {
         PotionEffect effect = player.getPotionEffect(PotionEffectType.SPEED);
+        return effect == null ? 0 : effect.getAmplifier() + 1;
+    }
+
+    public static int hasteAmplifier(Player player) {
+        PotionEffect effect = player.getPotionEffect(PotionEffectType.FAST_DIGGING);
         return effect == null ? 0 : effect.getAmplifier() + 1;
     }
 
@@ -66,6 +72,10 @@ public final class PlayerEnvironment {
         Block feet = location.getBlock();
         Block below = location.clone().add(0.0D, -0.08D, 0.0D).getBlock();
         return !feet.isLiquid() && below.isLiquid();
+    }
+
+    public static boolean isEdible(ItemStack item) {
+        return item != null && item.getType().isEdible();
     }
 
     private static boolean isSafeBlock(Block block) {

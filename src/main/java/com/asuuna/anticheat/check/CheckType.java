@@ -18,8 +18,14 @@ public enum CheckType {
     AUTOCLICKER("autoclicker", "AutoClicker"),
     FAST_PLACE("fast-place", "Fast Place"),
     FAST_BREAK("fast-break", "Fast Break"),
+    BLOCK_REACH("block-reach", "Block Reach"),
+    NUKER("nuker", "Nuker"),
+    FAST_BOW("fast-bow", "Fast Bow"),
+    FAST_EAT("fast-eat", "Fast Eat"),
     SCAFFOLD("scaffold", "Scaffold"),
-    INVENTORY_MOVE("inventory-move", "Inventory Move");
+    INVENTORY_MOVE("inventory-move", "Inventory Move"),
+    INVENTORY_CLICK_SPEED("inventory-click-speed", "Inventory Click Speed"),
+    NOFALL("nofall", "NoFall");
 
     private final String configKey;
     private final String displayName;

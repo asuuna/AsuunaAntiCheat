@@ -9,6 +9,8 @@ import com.asuuna.anticheat.config.AntiCheatConfig;
 import com.asuuna.anticheat.config.CheckSettings;
 import com.asuuna.anticheat.service.ViolationService;
 import com.asuuna.anticheat.util.PlayerEnvironment;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -28,6 +31,7 @@ public final class InventoryListener implements Listener {
     private final AntiCheatConfig config;
     private final ViolationService violations;
     private final Map<UUID, Long> openInventories = new ConcurrentHashMap<>();
+    private final Map<UUID, Deque<Long>> inventoryClicks = new ConcurrentHashMap<>();
 
     public InventoryListener(AntiCheatConfig config, ViolationService violations) {
         this.config = config;
@@ -49,6 +53,39 @@ public final class InventoryListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(InventoryCloseEvent event) {
         openInventories.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getWhoClicked();
+        CheckSettings settings = config.settings(CheckType.INVENTORY_CLICK_SPEED);
+        if (!settings.isEnabled() || player.hasPermission(config.getBypassPermission())) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long sampleMillis = Math.max(250L, (long) settings.number("sample-millis", 1000.0D));
+        Deque<Long> samples = inventoryClicks.computeIfAbsent(player.getUniqueId(), ignored -> new ArrayDeque<>());
+        int clicks;
+        synchronized (samples) {
+            samples.addLast(now);
+            while (!samples.isEmpty() && now - samples.peekFirst() > sampleMillis) {
+                samples.removeFirst();
+            }
+            clicks = samples.size();
+        }
+
+        int maxClicks = (int) settings.number("max-clicks", 18.0D);
+        if (clicks > maxClicks) {
+            boolean cancel = violations.flag(player, CheckType.INVENTORY_CLICK_SPEED, 0.8D,
+                "clicks=" + clicks + " max=" + maxClicks + " window=" + sampleMillis + "ms");
+            if (cancel) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -86,7 +123,9 @@ public final class InventoryListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        openInventories.remove(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        openInventories.remove(uuid);
+        inventoryClicks.remove(uuid);
     }
 
     private String round(double value) {
