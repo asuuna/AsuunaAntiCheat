@@ -52,6 +52,17 @@ Jar genere:
 target/AsuunaAntiCheat-1.2.0.jar
 ```
 
+## Installation
+
+Guide complet: [INSTALLATION.md](INSTALLATION.md)
+
+Resume:
+
+1. Telecharger le dernier jar depuis https://github.com/asuuna/AsuunaAntiCheat/releases/latest
+2. Placer le jar dans le dossier `plugins/`
+3. Redemarrer le serveur
+4. Verifier avec `/plugins` puis `/sac status`
+
 ## Commandes
 
 | Commande | Permission | Description |

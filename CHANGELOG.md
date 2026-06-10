@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Ajoute
+
+- Guide `INSTALLATION.md` pour ajouter le plugin sur un serveur.
+- Resume d'installation dans le README.
+
 ## [1.2.0] - 2026-06-10
 
 ### Ajoute
