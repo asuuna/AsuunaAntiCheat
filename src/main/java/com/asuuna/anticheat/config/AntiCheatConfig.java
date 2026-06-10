@@ -7,8 +7,10 @@ package com.asuuna.anticheat.config;
 import com.asuuna.anticheat.check.CheckType;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
@@ -21,6 +23,7 @@ public final class AntiCheatConfig {
     private volatile double violationDecayPerMinute = 4.0D;
     private volatile long alertCooldownMillis = 1200L;
     private volatile boolean logAlerts = true;
+    private volatile Set<String> disabledWorlds = Set.of();
     private volatile boolean punishmentsEnabled;
     private volatile double punishmentMaxViolations = 25.0D;
     private volatile List<String> punishmentCommands = List.of();
@@ -37,6 +40,7 @@ public final class AntiCheatConfig {
         violationDecayPerMinute = Math.max(0.0D, plugin.getConfig().getDouble("settings.violation-decay-per-minute", 4.0D));
         alertCooldownMillis = Math.max(0L, plugin.getConfig().getLong("settings.alert-cooldown-millis", 1200L));
         logAlerts = plugin.getConfig().getBoolean("settings.log-alerts", true);
+        disabledWorlds = readWorldList(plugin.getConfig().getStringList("settings.disabled-worlds"));
         punishmentsEnabled = plugin.getConfig().getBoolean("punishments.enabled", false);
         punishmentMaxViolations = Math.max(1.0D, plugin.getConfig().getDouble("punishments.max-violations", 25.0D));
         punishmentCommands = List.copyOf(plugin.getConfig().getStringList("punishments.commands"));
@@ -69,6 +73,10 @@ public final class AntiCheatConfig {
 
     public boolean isLogAlerts() {
         return logAlerts;
+    }
+
+    public boolean isWorldDisabled(String worldName) {
+        return worldName != null && disabledWorlds.contains(worldName.toLowerCase(java.util.Locale.ROOT));
     }
 
     public boolean isPunishmentsEnabled() {
@@ -124,5 +132,15 @@ public final class AntiCheatConfig {
             }
         }
         return values;
+    }
+
+    private Set<String> readWorldList(List<String> worlds) {
+        Set<String> values = new HashSet<>();
+        for (String world : worlds) {
+            if (world != null && !world.isBlank()) {
+                values.add(world.toLowerCase(java.util.Locale.ROOT));
+            }
+        }
+        return Set.copyOf(values);
     }
 }

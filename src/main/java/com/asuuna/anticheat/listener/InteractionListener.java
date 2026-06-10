@@ -14,6 +14,7 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -57,6 +58,16 @@ public final class InteractionListener implements Listener {
             if (cps > maxCps) {
                 violations.flag(player, CheckType.AUTOCLICKER, 0.75D, "cps=" + cps + " max=" + maxCps);
             }
+            int minConsistentSamples = (int) settings.number("min-consistent-samples", 12.0D);
+            int minConsistentCps = (int) settings.number("min-consistent-cps", 12.0D);
+            double minStdDev = settings.number("min-interval-std-dev", 4.0D);
+            if (cps >= minConsistentCps && samples.size() >= minConsistentSamples) {
+                double stdDev = intervalStdDev(samples);
+                if (stdDev >= 0.0D && stdDev < minStdDev) {
+                    violations.flag(player, CheckType.AUTOCLICKER, 0.9D,
+                        "cps=" + cps + " intervalStdDev=" + round(stdDev) + "ms");
+                }
+            }
         }
     }
 
@@ -66,6 +77,8 @@ public final class InteractionListener implements Listener {
         if (PlayerEnvironment.shouldSkipBlockTimings(player)) {
             return;
         }
+        checkScaffold(event, player);
+
         CheckSettings settings = config.settings(CheckType.FAST_PLACE);
         if (!settings.isEnabled()) {
             return;
@@ -118,5 +131,63 @@ public final class InteractionListener implements Listener {
         swings.remove(uuid);
         lastPlace.remove(uuid);
         lastBreak.remove(uuid);
+    }
+
+    private void checkScaffold(BlockPlaceEvent event, Player player) {
+        CheckSettings settings = config.settings(CheckType.SCAFFOLD);
+        if (!settings.isEnabled() || player.isSneaking()) {
+            return;
+        }
+
+        Location playerLocation = player.getLocation();
+        Location blockCenter = event.getBlockPlaced().getLocation().add(0.5D, 0.5D, 0.5D);
+        double horizontal = Math.hypot(playerLocation.getX() - blockCenter.getX(), playerLocation.getZ() - blockCenter.getZ());
+        double vertical = playerLocation.getY() - blockCenter.getY();
+        float pitch = playerLocation.getPitch();
+        boolean underPlayer = vertical > settings.number("min-vertical-gap", 0.45D)
+            && vertical < settings.number("max-vertical-gap", 1.85D)
+            && horizontal < settings.number("max-horizontal-gap", 1.35D);
+
+        if (underPlayer && pitch < settings.number("min-down-pitch", 45.0D)) {
+            boolean cancel = violations.flag(player, CheckType.SCAFFOLD, 1.0D,
+                "pitch=" + round(pitch) + " horizontal=" + round(horizontal) + " vertical=" + round(vertical));
+            if (cancel) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    private double intervalStdDev(Deque<Long> samples) {
+        if (samples.size() < 3) {
+            return -1.0D;
+        }
+        long previous = -1L;
+        double sum = 0.0D;
+        int count = 0;
+        for (Long sample : samples) {
+            if (previous >= 0L) {
+                sum += sample - previous;
+                count++;
+            }
+            previous = sample;
+        }
+        if (count <= 1) {
+            return -1.0D;
+        }
+        double average = sum / count;
+        previous = -1L;
+        double variance = 0.0D;
+        for (Long sample : samples) {
+            if (previous >= 0L) {
+                double delta = (sample - previous) - average;
+                variance += delta * delta;
+            }
+            previous = sample;
+        }
+        return Math.sqrt(variance / count);
+    }
+
+    private String round(double value) {
+        return String.format(java.util.Locale.ROOT, "%.3f", value);
     }
 }

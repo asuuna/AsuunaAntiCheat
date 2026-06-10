@@ -10,6 +10,7 @@ import com.asuuna.anticheat.config.CheckSettings;
 import com.asuuna.anticheat.model.PlayerViolationProfile;
 import com.asuuna.anticheat.model.ViolationBucket;
 import com.asuuna.anticheat.platform.PlatformScheduler;
+import com.asuuna.anticheat.util.ServerMetrics;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +46,9 @@ public final class ViolationService {
         if (player == null || !player.isOnline() || player.hasPermission(config.getBypassPermission())) {
             return false;
         }
+        if (player.getWorld() != null && config.isWorldDisabled(player.getWorld().getName())) {
+            return false;
+        }
 
         CheckSettings settings = config.settings(type);
         if (!settings.isEnabled()) {
@@ -55,11 +59,12 @@ public final class ViolationService {
         PlayerViolationProfile profile = profiles.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerViolationProfile());
         ViolationBucket bucket = profile.bucket(type, now);
         double violationLevel = bucket.add(amount, config.getViolationDecayPerMinute(), now);
+        String enrichedDetail = detail + " " + ServerMetrics.context(player);
 
         if (violationLevel >= settings.getAlertVl() && bucket.shouldAlert(config.getAlertCooldownMillis(), now)) {
-            alerts.alert(player.getName(), type.getDisplayName(), violationLevel, detail);
+            alerts.alert(player.getName(), type.getDisplayName(), violationLevel, enrichedDetail);
             if (config.isLogAlerts()) {
-                alertLogService.log(player.getName(), type.getDisplayName(), violationLevel, detail);
+                alertLogService.log(player.getName(), type.getDisplayName(), violationLevel, enrichedDetail);
             }
         }
 

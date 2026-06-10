@@ -36,6 +36,12 @@ public final class PlayerEnvironment {
         return effect == null ? 0 : effect.getAmplifier() + 1;
     }
 
+    public static boolean hasVerticalMovementEffect(Player player) {
+        return player.hasPotionEffect(PotionEffectType.JUMP)
+            || player.hasPotionEffect(PotionEffectType.LEVITATION)
+            || player.hasPotionEffect(PotionEffectType.SLOW_FALLING);
+    }
+
     public static boolean isNearSafeMovementBlock(Player player) {
         Location location = player.getLocation();
         return isSafeBlock(location.getBlock())
@@ -54,6 +60,12 @@ public final class PlayerEnvironment {
             }
         }
         return player.isOnGround();
+    }
+
+    public static boolean isOnLiquidSurface(Location location) {
+        Block feet = location.getBlock();
+        Block below = location.clone().add(0.0D, -0.08D, 0.0D).getBlock();
+        return !feet.isLiquid() && below.isLiquid();
     }
 
     private static boolean isSafeBlock(Block block) {

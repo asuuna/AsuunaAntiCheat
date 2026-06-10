@@ -9,10 +9,17 @@ import java.util.Locale;
 public enum CheckType {
     MOVEMENT_SPEED("movement-speed", "Movement Speed"),
     FLIGHT("flight", "Flight"),
+    TIMER("timer", "Timer"),
+    STEP("step", "Step"),
+    LIQUID_WALK("liquid-walk", "Liquid Walk"),
     REACH("reach", "Reach"),
+    COMBAT_ANGLE("combat-angle", "Combat Angle"),
+    MULTI_AURA("multi-aura", "Multi Aura"),
     AUTOCLICKER("autoclicker", "AutoClicker"),
     FAST_PLACE("fast-place", "Fast Place"),
-    FAST_BREAK("fast-break", "Fast Break");
+    FAST_BREAK("fast-break", "Fast Break"),
+    SCAFFOLD("scaffold", "Scaffold"),
+    INVENTORY_MOVE("inventory-move", "Inventory Move");
 
     private final String configKey;
     private final String displayName;

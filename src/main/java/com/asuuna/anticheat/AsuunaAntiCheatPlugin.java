@@ -8,6 +8,7 @@ import com.asuuna.anticheat.command.AntiCheatCommand;
 import com.asuuna.anticheat.config.AntiCheatConfig;
 import com.asuuna.anticheat.listener.CombatListener;
 import com.asuuna.anticheat.listener.ConnectionListener;
+import com.asuuna.anticheat.listener.InventoryListener;
 import com.asuuna.anticheat.listener.InteractionListener;
 import com.asuuna.anticheat.listener.MovementListener;
 import com.asuuna.anticheat.message.MessageService;
@@ -84,6 +85,7 @@ public final class AsuunaAntiCheatPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MovementListener(antiCheatConfig, violationService), this);
         getServer().getPluginManager().registerEvents(new CombatListener(antiCheatConfig, violationService), this);
         getServer().getPluginManager().registerEvents(new InteractionListener(antiCheatConfig, violationService), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(antiCheatConfig, violationService), this);
         getServer().getPluginManager().registerEvents(new ConnectionListener(violationService, staffAlertService), this);
     }
 

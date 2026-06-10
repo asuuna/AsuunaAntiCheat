@@ -10,6 +10,7 @@ settings:
   violation-decay-per-minute: 4.0
   alert-cooldown-millis: 1200
   log-alerts: true
+  disabled-worlds: []
 
 punishments:
   enabled: false
@@ -32,11 +33,48 @@ checks:
     max-air-ticks: 24
     max-hover-delta: 0.03
 
+  timer:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 9.0
+    max-moves: 28
+    sample-millis: 1000
+    min-horizontal-distance: 0.015
+
+  step:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-y-gain: 0.95
+    min-horizontal-distance: 0.08
+
+  liquid-walk:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-surface-ticks: 8
+    min-horizontal-distance: 0.08
+    max-y-change: 0.04
+
   reach:
     enabled: true
     alert-vl: 3.0
     cancel-vl: 5.0
     max-distance: 3.35
+
+  combat-angle:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-angle: 78.0
+    min-distance: 1.25
+
+  multi-aura:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-targets: 3
+    sample-millis: 700
 
   autoclicker:
     enabled: true
@@ -44,6 +82,9 @@ checks:
     cancel-vl: 999.0
     max-cps: 18
     sample-millis: 1000
+    min-consistent-samples: 12
+    min-consistent-cps: 12
+    min-interval-std-dev: 4.0
 
   fast-place:
     enabled: true
@@ -56,3 +97,19 @@ checks:
     alert-vl: 5.0
     cancel-vl: 9.0
     min-delay-millis: 65
+
+  scaffold:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 9.0
+    min-down-pitch: 45.0
+    min-vertical-gap: 0.45
+    max-vertical-gap: 1.85
+    max-horizontal-gap: 1.35
+
+  inventory-move:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    min-horizontal-distance: 0.04
+    open-grace-millis: 250

@@ -18,6 +18,13 @@ class CheckTypeTest {
     }
 
     @Test
+    void everyCheckResolvesItsOwnConfigKey() {
+        for (CheckType type : CheckType.values()) {
+            assertEquals(type, CheckType.fromConfigKey(type.getConfigKey()));
+        }
+    }
+
+    @Test
     void rejectsUnknownKeys() {
         assertThrows(IllegalArgumentException.class, () -> CheckType.fromConfigKey("unknown"));
     }
