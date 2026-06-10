@@ -1,0 +1,58 @@
+# AsuunaAntiCheat configuration
+#
+# Default policy: alert and mitigate, do not ban automatically.
+# Keep thresholds conservative and test on a pre-production server before raising enforcement.
+
+settings:
+  debug: false
+  alert-permission: asuunaac.alerts
+  bypass-permission: asuunaac.bypass
+  violation-decay-per-minute: 4.0
+  alert-cooldown-millis: 1200
+  log-alerts: true
+
+punishments:
+  enabled: false
+  max-violations: 25.0
+  commands:
+    - "kick %player% Unfair advantage detected (%check%)"
+
+checks:
+  movement-speed:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 7.0
+    max-horizontal-distance: 0.85
+    speed-potion-bonus: 0.08
+
+  flight:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 8.0
+    max-air-ticks: 24
+    max-hover-delta: 0.03
+
+  reach:
+    enabled: true
+    alert-vl: 3.0
+    cancel-vl: 5.0
+    max-distance: 3.35
+
+  autoclicker:
+    enabled: true
+    alert-vl: 4.0
+    cancel-vl: 999.0
+    max-cps: 18
+    sample-millis: 1000
+
+  fast-place:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 8.0
+    min-delay-millis: 45
+
+  fast-break:
+    enabled: true
+    alert-vl: 5.0
+    cancel-vl: 9.0
+    min-delay-millis: 65

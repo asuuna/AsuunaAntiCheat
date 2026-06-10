@@ -1,0 +1,22 @@
+prefix: "&8[&cAsuunaAC&8]&r "
+
+messages:
+  no-permission: "%prefix%&cTu n'as pas la permission."
+  player-only: "%prefix%&cCette commande doit etre executee en jeu."
+  unknown-command: "%prefix%&cCommande inconnue. Utilise &e/sac help&c."
+  reloaded: "%prefix%&aConfiguration rechargee."
+  alerts-on: "%prefix%&aAlertes activees."
+  alerts-off: "%prefix%&cAlertes desactivees."
+  reset-player: "%prefix%&aViolations de &f%player% &areinitialisees."
+  player-not-found: "%prefix%&cJoueur introuvable: &f%player%&c."
+  status: "%prefix%&7Checks actifs: &f%checks% &7| joueurs suivis: &f%players%&7."
+  profile-header: "%prefix%&eProfil anti-cheat de &f%player%&e:"
+  profile-entry: "&8- &f%check% &7VL: &e%vl%"
+  profile-empty: "%prefix%&7Aucune violation active."
+  alert: "%prefix%&c%player% &7a declenche &f%check% &8(&7VL %vl%&8) &7- &f%detail%"
+  help:
+    - "&c/sac status &7- Etat du plugin"
+    - "&c/sac alerts &7- Activer/desactiver tes alertes"
+    - "&c/sac profile <joueur> &7- Voir les violations"
+    - "&c/sac reset <joueur> &7- Reinitialiser les violations"
+    - "&c/sac reload &7- Recharger la configuration"

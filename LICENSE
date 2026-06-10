@@ -1,0 +1,37 @@
+AsuunaAntiCheat Proprietary License
+
+Copyright (c) 2026 asuuna.
+All rights reserved.
+
+Owner
+AsuunaAntiCheat, including its source code, configuration examples,
+documentation, plugin logic, check logic, package structure, and compiled
+builds, belongs to asuuna unless a written agreement signed by asuuna says
+otherwise.
+
+Allowed Use
+You may download, read, compile, and run this plugin for personal or server use.
+You may modify the plugin for your own private server environment.
+
+Restrictions
+Without explicit written permission from asuuna, you may not:
+
+- sell, rent, sublicense, or commercially redistribute the plugin;
+- publish, re-upload, mirror, or redistribute modified or unmodified copies;
+- remove or alter copyright, author, license, or ownership notices;
+- claim authorship or ownership of the plugin;
+- use the code as the base of another public or commercial plugin;
+- package the plugin inside a paid setup, marketplace product, or leaked bundle.
+
+Attribution
+Any allowed private use must keep the author attribution to asuuna in the
+source code, plugin metadata, documentation, and visible repository files.
+
+No Warranty
+This plugin is provided "as is", without warranty of any kind. asuuna is not
+responsible for data loss, server issues, configuration mistakes, conflicts
+with other plugins, false positives, or any other damage caused by use or
+modification.
+
+Permission
+Permissions outside this license must be requested directly from asuuna.

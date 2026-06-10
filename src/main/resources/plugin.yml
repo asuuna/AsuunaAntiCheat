@@ -1,0 +1,30 @@
+name: AsuunaAntiCheat
+version: ${project.version}
+main: com.asuuna.anticheat.AsuunaAntiCheatPlugin
+api-version: '1.20'
+author: asuuna
+description: Custom anti-cheat for Paper, Spigot and Bukkit.
+
+commands:
+  sac:
+    description: Manage AsuunaAntiCheat.
+    usage: /<command> help
+    aliases: [asuunaac, anticheat]
+    permission: asuunaac.command
+
+permissions:
+  asuunaac.command:
+    description: Allows reading anti-cheat status and help.
+    default: op
+  asuunaac.alerts:
+    description: Allows receiving staff anti-cheat alerts.
+    default: op
+  asuunaac.admin:
+    description: Allows reloading, resetting and managing AsuunaAntiCheat.
+    default: op
+    children:
+      asuunaac.command: true
+      asuunaac.alerts: true
+  asuunaac.bypass:
+    description: Bypasses all anti-cheat checks.
+    default: false
